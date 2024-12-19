@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace Gwynwhyvaar.Utils.Shared.Extensions
 {
@@ -116,8 +119,79 @@ namespace Gwynwhyvaar.Utils.Shared.Extensions
         {
             if (serializerOptions == null)
                 return JsonSerializer.Serialize(obj);
-            else
-                return JsonSerializer.Serialize(obj, serializerOptions);
+            return JsonSerializer.Serialize(obj, serializerOptions);
+        }
+
+        /// <summary>
+        ///  generic method  - converts a <T> object into an xml string
+        /// </summary>
+        /// <param name="o">object to convert to xml string</param>
+        /// <param name="removeHeaderDeclaration">flag to determine if xml header tag should be added to output</param>
+        /// <typeparam name="T">the type of the object to convert</typeparam>
+        /// <returns>xml out put string of conversion</returns>
+        public static string ToXml<T>(this T o, bool removeHeaderDeclaration = false)
+        {
+            var sw = new StringWriter();
+            XmlTextWriter tw = null;
+            try
+            {
+                var serializer = new XmlSerializer(o.GetType());
+                tw = new XmlTextWriter(sw);
+                serializer.Serialize(tw, o);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceInformation("Exception {0}", ex.ToString());
+            }
+            finally
+            {
+                sw.Close();
+                if (tw != null) tw.Close();
+            }
+
+            if (!string.IsNullOrEmpty(sw.ToString()) && removeHeaderDeclaration)
+                return sw.ToString().Replace("<?xml version=\"1.0\" encoding=\"utf-16\"?>", "");
+            return sw.ToString();
+        }
+
+        /// <summary>
+        /// convert an xml string to an object
+        /// </summary>
+        /// <param name="xml"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T FromXml<T>(this string xml)
+        {
+            StringReader strReader = null;
+            XmlSerializer serializer;
+            XmlTextReader xmlReader = null;
+            object obj = null;
+            try
+            {
+                strReader = new StringReader(xml);
+                serializer = new XmlSerializer(typeof(T));
+                xmlReader = new XmlTextReader(strReader);
+                obj = serializer.Deserialize(xmlReader);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceInformation("Error {0} Converting Xml string to {1}", ex.Message, typeof(T).FullName);
+            }
+            finally
+            {
+                if (xmlReader != null) xmlReader.Close();
+                if (strReader != null) strReader.Close();
+            }
+
+            if (obj is T) return (T)obj;
+            try
+            {
+                return (T)Convert.ChangeType(obj, typeof(T));
+            }
+            catch (InvalidCastException)
+            {
+                return default;
+            }
         }
     }
 }

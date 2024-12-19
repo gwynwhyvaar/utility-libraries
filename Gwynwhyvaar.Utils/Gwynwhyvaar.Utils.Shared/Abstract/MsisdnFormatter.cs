@@ -1,4 +1,4 @@
-﻿using Gwynwhyvaar.Utils.Shared.Concrete;
+﻿using Gwynwhyvaar.Utils.Shared.Concrete.Formatters;
 using Gwynwhyvaar.Utils.Shared.Enums;
 
 namespace Gwynwhyvaar.Utils.Shared.Abstract

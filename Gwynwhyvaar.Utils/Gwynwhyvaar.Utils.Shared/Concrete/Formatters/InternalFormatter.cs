@@ -1,6 +1,6 @@
 ﻿using Gwynwhyvaar.Utils.Shared.Abstract;
 
-namespace Gwynwhyvaar.Utils.Shared.Concrete
+namespace Gwynwhyvaar.Utils.Shared.Concrete.Formatters
 {
     public class InternalFormatter : MsisdnFormatter
     {
